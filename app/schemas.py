@@ -36,3 +36,17 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class LibraryItem(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    publication_date: Optional[str] = None
+    author: Optional[str] = None
+    genre: Optional[str] = None
+    available_copies: int
+    published_year: Optional[int] = None
+
+    class Config:
+        orm_mode = True

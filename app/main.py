@@ -8,6 +8,9 @@ from app.auth import auth_router
 from app.auth import register_user, authenticate_user, create_access_token
 from app.schemas import UserCreate, UserLogin
 from decouple import config
+from typing import List
+from . import models, schemas
+from .database import get_db
 
 # Строка подключения к базе данных
 SQLALCHEMY_DATABASE_URL = config("DATABASE_URL")
@@ -82,3 +85,16 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     token = create_access_token(data={"sub": db_user.username})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@app.get("/library_items/", response_model=List[schemas.LibraryItem])
+def get_library_items(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    """
+    Получить список элементов библиотеки.
+    :param skip: Количество элементов, которые нужно пропустить (для пагинации).
+    :param limit: Максимальное количество элементов для возвращения.
+    :param db: Сессия базы данных.
+    :return: Список элементов библиотеки.
+    """
+    items = db.query(models.LibraryItem).offset(skip).limit(limit).all()
+    return items
