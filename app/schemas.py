@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel
 from typing import Optional
 
@@ -47,6 +49,20 @@ class LibraryItem(BaseModel):
     genre: Optional[str] = None
     available_copies: int
     published_year: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+
+
+class LibraryItemRead(BaseModel):
+    id: int
+    title: str
+    author: str
+    published_year: Optional[int] = None
+    description: Optional[str] = None
+    publication_date: Optional[date] = None
+    genre: Optional[str] = None
+    available_copies: int
 
     class Config:
         orm_mode = True

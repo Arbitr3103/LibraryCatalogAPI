@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.models import Base, LibraryItem
-from app.schemas import LibraryItemCreate
+from app.schemas import LibraryItemCreate, LibraryItemRead
 from sqlalchemy.exc import SQLAlchemyError
 from app.auth import auth_router
 from app.auth import register_user, authenticate_user, create_access_token
@@ -98,3 +98,11 @@ def get_library_items(skip: int = 0, limit: int = 10, db: Session = Depends(get_
     """
     items = db.query(models.LibraryItem).offset(skip).limit(limit).all()
     return items
+
+
+@app.get("/library_item/{item_id}", response_model=LibraryItemRead)
+def get_library_item(item_id: int, db: Session = Depends(get_db)):
+    db_item = db.query(LibraryItem).filter(LibraryItem.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Library item not found")
+    return db_item
