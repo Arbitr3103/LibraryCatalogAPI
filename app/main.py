@@ -4,9 +4,13 @@ from sqlalchemy.orm import sessionmaker, Session
 from app.models import Base, LibraryItem
 from app.schemas import LibraryItemCreate
 from sqlalchemy.exc import SQLAlchemyError
+from app.auth import auth_router
+from app.auth import register_user, authenticate_user, create_access_token
+from app.schemas import UserCreate, UserLogin
+from decouple import config
 
 # Строка подключения к базе данных
-SQLALCHEMY_DATABASE_URL = "postgresql://vladimirbragin:Mark2022@localhost/library_catalog"
+SQLALCHEMY_DATABASE_URL = config("DATABASE_URL")
 
 # Создаем движок для работы с базой данных
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -16,6 +20,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Инициализация приложения FastAPI
 app = FastAPI()
+
+# Подключение маршрутов авторизации
+app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 
 
 # Функция для создания всех таблиц
@@ -61,3 +68,17 @@ def create_library_item(item: LibraryItemCreate, db: Session = Depends(get_db)):
 def get_library_items(db: Session = Depends(get_db)):
     items = db.query(LibraryItem).all()
     return items
+
+
+@app.post("/register/")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    return register_user(db, user)
+
+
+@app.post("/login/")
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = authenticate_user(db, user.username, user.password)
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    token = create_access_token(data={"sub": db_user.username})
+    return {"access_token": token, "token_type": "bearer"}
