@@ -66,3 +66,13 @@ class LibraryItemRead(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class LibraryItemUpdate(BaseModel):
+    title: Optional[str] = None
+    author: Optional[str] = None
+    published_year: Optional[int] = None
+    description: Optional[str] = None
+    publication_date: Optional[str] = None
+    genre: Optional[str] = None
+    available_copies: Optional[int] = None

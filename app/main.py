@@ -106,3 +106,35 @@ def get_library_item(item_id: int, db: Session = Depends(get_db)):
     if not db_item:
         raise HTTPException(status_code=404, detail="Library item not found")
     return db_item
+
+
+@app.put("/library_item/{item_id}", response_model=schemas.LibraryItem)
+def update_library_item(item_id: int, item_update: schemas.LibraryItemUpdate, db: Session = Depends(get_db)):
+    # Получаем элемент из базы данных
+    db_item = db.query(models.LibraryItem).filter(models.LibraryItem.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Library item not found")
+
+    # Обновляем только те поля, которые были переданы в запросе
+    for key, value in item_update.dict(exclude_unset=True).items():
+        setattr(db_item, key, value)
+
+    # Сохраняем изменения в базе данных
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+@app.delete("/library_items/{item_id}", response_model=dict)
+def delete_library_item(item_id: int, db: Session = Depends(get_db)):
+    db_item = db.query(LibraryItem).filter(LibraryItem.id == item_id).first()
+    if not db_item:
+        raise HTTPException(status_code=404, detail="Library item not found")
+    try:
+        db.delete(db_item)
+        db.commit()
+        return {"detail": "Item deleted successfully"}
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete item")
