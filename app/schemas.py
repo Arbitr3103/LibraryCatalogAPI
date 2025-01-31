@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 
 
@@ -15,11 +15,24 @@ class LibraryItemCreate(BaseModel):
 
 class UserBase(BaseModel):
     username: str
-    email: str
+    email: EmailStr
 
 
-class UserCreate(UserBase):
-    password: str
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    password: str = Field(min_length=8)  # Минимальная длина пароля
+
+    # Валидатор для проверки сложности пароля
+    @field_validator("password")
+    def validate_password(cls, value):
+        if not any(char.islower() for char in value):
+            raise ValueError("Пароль должен содержать хотя бы одну строчную букву.")
+        if not any(char.isupper() for char in value):
+            raise ValueError("Пароль должен содержать хотя бы одну заглавную букву.")
+        if not any(char.isdigit() for char in value):
+            raise ValueError("Пароль должен содержать хотя бы одну цифру.")
+        return value
 
 
 class UserResponse(UserBase):

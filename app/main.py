@@ -1,5 +1,4 @@
 from typing import List, Optional
-
 from decouple import config
 from fastapi import FastAPI, Depends, HTTPException, APIRouter
 from sqlalchemy import create_engine
@@ -9,6 +8,12 @@ from sqlalchemy.orm import sessionmaker, Session
 from app.auth import auth_router, register_user, authenticate_user, create_access_token
 from app.models import Base, LibraryItem
 from app.schemas import LibraryItemCreate, LibraryItemRead, UserCreate, UserLogin, LibraryItemUpdate
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # Строка подключения к базе данных
 SQLALCHEMY_DATABASE_URL = config("DATABASE_URL")
@@ -26,7 +31,7 @@ app = FastAPI()
 router = APIRouter()
 
 # Подключение маршрутов авторизации
-app.include_router(auth_router, prefix="/auth", tags=["Auth"])
+app.include_router(auth_router)
 
 
 # Функция для создания всех таблиц

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Boolean
+from app.database import Base
 
 
 Base = declarative_base()

@@ -1,4 +1,4 @@
-#!/Users/vladimirbragin/PycharmProject/indaspace_1/LibraryCatalogAPI/venv/bin/python3.12
+#!/Users/vladimirbragin/PycharmProject/indaspace_1/LibraryCatalogAPI/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
