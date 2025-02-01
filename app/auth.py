@@ -1,16 +1,16 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from decouple import config
+from app.models import LibraryItem
 import logging
 
 from app.models import User
-from app.schemas import UserCreate, Token, UserResponse
+from app.schemas import UserCreate, Token, UserResponse, LibraryItemResponse
 from app.database import get_db
 from app.utils import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -22,7 +22,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 # Инициализация роутера
 auth_router = APIRouter(prefix="/auth", tags=["Auth"])
-
+library_router = APIRouter(prefix="/library_items", tags=["Library Items"])
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -152,3 +152,28 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 def read_users_me(current_user: User = Depends(get_current_user)):
     """Эндпоинт для получения данных текущего пользователя."""
     return current_user
+
+
+@library_router.get("/", response_model=List[LibraryItemResponse])
+def get_library_items(
+        db: Session = Depends(get_db),
+        author: Optional[str] = None,
+        published_year: Optional[int] = None,
+        genre: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 10
+):
+    """
+    Получает список элементов библиотеки с фильтрацией по автору, году публикации и жанру.
+    """
+    query = db.query(LibraryItem)
+
+    if author:
+        query = query.filter(LibraryItem.author.ilike(f"%{author}%"))
+    if published_year:
+        query = query.filter(LibraryItem.published_year == published_year)
+    if genre:
+        query = query.filter(LibraryItem.genre.ilike(f"%{genre}%"))
+
+    items = query.offset(skip).limit(limit).all()
+    return items

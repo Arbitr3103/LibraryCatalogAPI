@@ -89,3 +89,13 @@ class LibraryItemUpdate(BaseModel):
     publication_date: Optional[str] = None
     genre: Optional[str] = None
     available_copies: Optional[int] = None
+
+class LibraryItemResponse(BaseModel):
+    id: int
+    title: str
+    author: str
+    genre: Optional[str] = None
+    published_year: Optional[int] = None
+
+    class Config:
+        from_attributes = True  # Позволяет Pydantic работать с SQLAlchemy-моделями
