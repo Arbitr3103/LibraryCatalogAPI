@@ -1,31 +1,71 @@
 from datetime import date
-
-from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
+# ======================================================================
+# Схемы для работы с элементами библиотеки
+# ======================================================================
 
-class LibraryItemCreate(BaseModel):
+class LibraryItemBase(BaseModel):
     title: str
     author: str
+    genre: Optional[str] = None
     published_year: Optional[int] = None
+    description: Optional[str] = None
+    available_copies: int = 1  # Значение по умолчанию
+
+    class Config:
+        orm_mode = True  # Позволяет работать с объектами SQLAlchemy
+
+
+class LibraryItemCreate(LibraryItemBase):
+    """
+    Схема для создания нового элемента библиотеки.
+    Использует все поля из LibraryItemBase.
+    """
+    pass
+
+
+class LibraryItemRead(LibraryItemBase):
+    """
+    Схема для чтения (вывода) элемента библиотеки.
+    Добавляется поле идентификатора.
+    """
+    id: int
+
+
+class LibraryItemUpdate(BaseModel):
+    """
+    Схема для обновления элемента библиотеки.
+    Все поля опциональны.
+    """
+    title: Optional[str] = None
+    author: Optional[str] = None
+    genre: Optional[str] = None
+    published_year: Optional[int] = None
+    description: Optional[str] = None
+    available_copies: Optional[int] = None
 
     class Config:
         orm_mode = True
 
+# ======================================================================
+# Схемы для работы с пользователями
+# ======================================================================
 
 class UserBase(BaseModel):
     username: str
     email: EmailStr
 
 
-class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
+class UserCreate(UserBase):
     password: str = Field(min_length=8)  # Минимальная длина пароля
+    role: str  # Допустимые значения, например, "admin" или "user"
+    is_admin: bool = False
 
-    # Валидатор для проверки сложности пароля
+    # Валидатор для проверки сложности пароля (подходит для pydantic v2)
     @field_validator("password")
-    def validate_password(cls, value):
+    def validate_password(cls, value: str) -> str:
         if not any(char.islower() for char in value):
             raise ValueError("Пароль должен содержать хотя бы одну строчную букву.")
         if not any(char.isupper() for char in value):
@@ -37,6 +77,7 @@ class UserCreate(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    role: str
     is_admin: bool
 
     class Config:
@@ -52,50 +93,3 @@ class Token(BaseModel):
     access_token: str
     token_type: str
 
-
-class LibraryItem(BaseModel):
-    id: int
-    title: str
-    description: Optional[str] = None
-    publication_date: Optional[str] = None
-    author: Optional[str] = None
-    genre: Optional[str] = None
-    available_copies: int
-    published_year: Optional[int] = None
-
-    class Config:
-        orm_mode = True
-
-
-class LibraryItemRead(BaseModel):
-    id: int
-    title: str
-    author: str
-    published_year: Optional[int] = None
-    description: Optional[str] = None
-    publication_date: Optional[date] = None
-    genre: Optional[str] = None
-    available_copies: int
-
-    class Config:
-        orm_mode = True
-
-
-class LibraryItemUpdate(BaseModel):
-    title: Optional[str] = None
-    author: Optional[str] = None
-    published_year: Optional[int] = None
-    description: Optional[str] = None
-    publication_date: Optional[str] = None
-    genre: Optional[str] = None
-    available_copies: Optional[int] = None
-
-class LibraryItemResponse(BaseModel):
-    id: int
-    title: str
-    author: str
-    genre: Optional[str] = None
-    published_year: Optional[int] = None
-
-    class Config:
-        from_attributes = True  # Позволяет Pydantic работать с SQLAlchemy-моделями
