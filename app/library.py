@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models import LibraryItem, User
-from app.schemas import LibraryItemRead, LibraryItemCreate, LibraryItemUpdate
+from app.schemas import LibraryItemRead, LibraryItemCreate, LibraryItemUpdate, LibraryItemResponse
 from app.database import get_db
 from app.auth import get_current_user
 
@@ -31,23 +31,31 @@ def create_library_item(
         raise HTTPException(status_code=400, detail="Error creating item")
 
 
-@library_router.get("/", response_model=List[LibraryItemRead])
+@library_router.get("/", response_model=List[LibraryItemResponse])
 def get_library_items(
-        skip: int = 0,
-        limit: int = 10,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),  # Проверяем, авторизован ли пользователь
         author: Optional[str] = None,
-        genre: Optional[str] = None,
         published_year: Optional[int] = None,
-        db: Session = Depends(get_db)
+        genre: Optional[str] = None,
+        skip: int = 0,
+        limit: int = 10
 ):
+    """
+    Получает список элементов библиотеки с фильтрацией по автору, году публикации и жанру.
+    Только авторизованные пользователи могут делать этот запрос.
+    """
     query = db.query(LibraryItem)
+
     if author:
         query = query.filter(LibraryItem.author.ilike(f"%{author}%"))
-    if genre:
-        query = query.filter(LibraryItem.genre.ilike(f"%{genre}%"))
     if published_year:
         query = query.filter(LibraryItem.published_year == published_year)
-    return query.offset(skip).limit(limit).all()
+    if genre:
+        query = query.filter(LibraryItem.genre.ilike(f"%{genre}%"))
+
+    items = query.offset(skip).limit(limit).all()
+    return items
 
 
 @library_router.get("/{item_id}", response_model=LibraryItemRead)

@@ -23,7 +23,7 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True, nullable=False)
     description = Column(Text, nullable=True)
-    publish_date = Column(Date, nullable=True)
+    published_year = Column(Integer, nullable=False)
     author_id = Column(Integer, ForeignKey('authors.id'), nullable=False)
     genre = Column(String, nullable=True)
     available_copies = Column(Integer, default=1)
@@ -67,9 +67,9 @@ class LibraryItem(Base):
     title = Column(String, index=True, nullable=False)
     author = Column(String, nullable=False)
     genre = Column(String, nullable=True)
-    published_year = Column(Integer, nullable=True)
+    published_year = Column(Integer, nullable=False)
     description = Column(Text, nullable=True)
-    available_copies = Column(Integer, default=1)
+    available_copies = Column(Integer, nullable=False, default=1)
 
 
 # Модель для пользователей

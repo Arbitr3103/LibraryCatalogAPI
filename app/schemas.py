@@ -2,6 +2,7 @@ from datetime import date
 from typing import Optional
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+
 # ======================================================================
 # Схемы для работы с элементами библиотеки
 # ======================================================================
@@ -49,6 +50,21 @@ class LibraryItemUpdate(BaseModel):
     class Config:
         orm_mode = True
 
+
+class LibraryItemResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str]
+    publication_date: Optional[str]
+    author: str
+    genre: Optional[str]
+    available_copies: int
+    published_year: Optional[int]
+
+    class Config:
+        from_attributes = True  # Поддержка SQLAlchemy моделей
+
+
 # ======================================================================
 # Схемы для работы с пользователями
 # ======================================================================
@@ -92,4 +108,3 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
-
